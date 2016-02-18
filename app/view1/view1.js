@@ -39,11 +39,25 @@ angular.module('myApp.view1', ['ngRoute'])
             headers: $scope.headers
         };
 
-
         console.log(send_data);
 
         file.csv(send_data, function(response){
             download(response.data, "data.csv", "text/csv");
+        });
+    }
+
+
+    $scope.downloadXLS = function(){
+
+        var send_data = {
+            data: $scope.data,
+            headers: $scope.headers
+        };
+
+        console.log(send_data);
+
+        file.xls(send_data, function(response){
+            download(response.data, "data.xls", "application/vnd.ms-excel");
         });
     }
 }]);
