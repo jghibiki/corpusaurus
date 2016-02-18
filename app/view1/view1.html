@@ -1,1 +1,22 @@
-<p>This is the partial for view 1.</p>
+<table>
+    <tr>
+        <th ng-repeat="col in headers">{{col}}</th>
+        <th>
+            <input type="text" ng-model="newCol">
+            <button ng-click="addCol()">Add Collumn</button>
+        </th>
+    </tr>
+    <tr ng-repeat="row in data">
+        <td ng-repeat="col in row track by $index">
+            <input type="text" ng-model="data[$parent.$index][$index]"/>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <button ng-click="addRow()">Add Row</button>
+        </td>
+    </tr>
+</table>
+<br>
+
+<button ng-click="downloadCSV()">Download as CSV</button>
