@@ -30,4 +30,5 @@ if __name__ == "__main__":
                   | |                                         
                   |_|                                         
     """)
+    print("Version 0.2")
     app.run(host=opts.host, port=int(opts.port), debug=opts.debug)
