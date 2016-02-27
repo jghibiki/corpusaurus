@@ -79,7 +79,7 @@ def register(app, opts):
     def setRange(start, end):
         session["start"] = start - 1
         session["end"] = end
-        session["next"] = start
+        session["next"] = start - 1
         session["current"] = None
         return jsonify({"result": True})
 

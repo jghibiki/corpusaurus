@@ -1,4 +1,6 @@
 app:
     build: .
     ports:
-        - "8000:5000"
+        - "8000:8000"
+
+    command: /code/Corpusaurus -i input.csv -o output.csv --host 0.0.0.0 -d

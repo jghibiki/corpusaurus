@@ -37,14 +37,14 @@ angular.module('corpusaurus.classifier', ['ngRoute'])
         $scope.loading = true;
         $scope.progress = 0;
         $scope.total = $scope.stop - $scope.start + 1;
-        $http.post('/api/classification/range/' + $scope.start + "/" + $scope.stop + "/")
+        $http.post('api/classification/range/' + $scope.start + "/" + $scope.stop + "/")
         .then(getNext, function(resp){
             console.log(resp);
             alert("error");
         });
     }
 
-    $http.get('/api/classification/element/count/')
+    $http.get('api/classification/element/count/')
     .then(function(resp){
         $scope.elementsToClassify = resp.data.result; 
         $scope.loading = false;
@@ -55,10 +55,12 @@ angular.module('corpusaurus.classifier', ['ngRoute'])
 
     function getNext(){
         if($scope.progress !== $scope.total){
-            $http.get('/api/classification/element/')
+            $http.get('api/classification/element/')
             .then(function(resp){
                 $scope.progress = $scope.progress + 1;
-                $scope.tweet = resp.data.result;
+                $scope.tweet = resp.data.result
+                    .replace("&amp;", "&")
+                    .replace(/https:\/\/t.co\/[A-Za-z-0-9]+/gi, "<URL> ");
                 $scope.initialized = true;
                 $scope.loading = false;
             }, function(resp){
@@ -73,7 +75,7 @@ angular.module('corpusaurus.classifier', ['ngRoute'])
 
     function classifyTweet(classification){
         $scope.loading = true;
-        $http.post('/api/classification/element/classify/' + classification + "/")
+        $http.post('api/classification/element/classify/' + classification + "/")
         .then(getNext, function(resp){
             console.log(resp);
             alert("error");
