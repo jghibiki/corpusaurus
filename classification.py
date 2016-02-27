@@ -1,22 +1,86 @@
-from flask import session
+from flask import session, request, jsonify, abort
 import tablib
 import json
 import csv
 
 in_data = tablib.Dataset()
 out_data = tablib.Dataset()
+base_route = "/api/classification/"
+out_data_path = None
 
 def load(opts):
-    if opts.input_data == None:
+    if opts.input_data != None:
+        if opts.debug: print("Loading Data")
         with open(opts.input_data, "r") as f:
             reader = csv.reader(f)
-            in_data_set.headers = next(reader)
+            in_data.headers = next(reader)
             for row in reader:
-                in_data_set.append(row)
+                in_data.append(row)
+        if opts.debug: print("Loaded %s rows of data." % len(in_data) )
 
-        if opts.output_headers:
-            out_data_set.headers = opts.output_headers.replace(" ", "").split(",")
+        if opts.output_header:
+            header = opts.output_header
+        else:
+            header = "data"
 
+        out_data.headers = [ header, "example", "nonexample", "unknown" ]
+        fake_row = [ "", 0, 0, 0]
+
+        for row in range(len(in_data)):
+            out_data.append(fake_row)
+
+        global out_data_path
+        out_data_path = opts.output_data if opts.output_data else "out.csv"
+        with open(out_data_path, "w") as f:
+            f.write(out_data.csv)
 
 def register(app, opts):
-    pass
+
+    @app.route(base_route + "element/count/", methods=["GET"])
+    def getNumberOfElements():
+        return jsonify({"result": len(in_data)})
+
+    @app.route(base_route + "element/", methods=["GET"])
+    def getElementInSessionRange():
+        if "next" in session:
+            nxt = session["next"]
+            session["current"] = nxt
+            element = in_data["tweet"][nxt]
+            resp = jsonify({"result": element})
+            session["next"] += 1
+            return resp
+        else:
+            abort(400)
+
+    @app.route(base_route + "element/classify/<classification>/", methods=["POST"])
+    def setElementClassification(classification):
+        if "current" in session:
+            current = session["current"]
+            element = in_data[current]
+            out_element = out_data[current]
+
+            if classification == "example":
+                out_data[current] = (element[4], out_element[1]+1, out_element[2], out_element[3])
+            elif classification == "nonexample":
+                out_data[current] = (element[4], out_element[1], out_element[2]+1, out_element[3])
+            elif classification == "unknown":
+                out_data[current] = (element[4], out_element[1], out_element[2], out_element[3]+1)
+
+            global out_data_path
+            with open(out_data_path, "w") as f:
+                f.write(out_data.csv)
+
+            return jsonify({"response": True})
+
+
+
+
+    @app.route(base_route + "range/<int:start>/<int:end>/", methods=["POST"])
+    def setRange(start, end):
+        session["start"] = start - 1
+        session["end"] = end
+        session["next"] = start
+        session["current"] = None
+        return jsonify({"result": True})
+
+

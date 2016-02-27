@@ -1,10 +1,17 @@
-<div class="text-center">
+<div class="text-center" ng-show="initialized && !loading && !done">
     <br>
     <br>
     <div class="pure-g">
         <div class="pure-u-1">
             <h3>
-                {{currentTweet}}
+                Progress: {{progress}}/{{total}}
+            </h3>
+        </div>
+    </div>
+    <div class="pure-g">
+        <div class="pure-u-1">
+            <h3>
+                {{tweet}}
             </h3>
         </div>
     </div>
@@ -24,3 +31,69 @@
         </div>
     </div>
 </div>
+<div class="text-center" ng-show="!initialized && !loading && !done">
+    <br>
+    <br>
+    <div class="pure-g">
+        <div class="pure-u-1">
+            <h3>
+                Please enter a range. There are: {{elementsToClassify}} elements to classify.
+            </h3>
+        </div>
+    </div>
+    <br>
+    <hr>
+    <br>
+    <div class="pure-g">
+        <div class="pure-u-1-3"></div>
+        <div class="pure-u-1-6">
+            <form class="pure-form">
+                <input type="number" ng-model="start" placeholder="Start" min="0" max="{{elementsToClassify}}" required/>
+            </form>
+        </div>
+        <div class="pure-u-1-6">
+            <form class="pure-form">
+                <input type="number" ng-model="stop" placeholder="End" min="0" max="{{elementsToClassify}}" required/>
+            </form>
+        </div>
+        <div class="pure-u-1-3"></div>
+    </div>
+    <br>
+    <br>
+    <div class="pure-g">
+        <div class="pure-u-2-5"></div>
+        <div class="pure-u-1-5">
+            <button class="btn btn-primary btn-lg btn-block" ng-click="initialize()">Submit</button>
+        </div>
+        <div class="pure-u-2-5"></div>
+    </div>
+</div>
+<div class="text-center" ng-show="loading && !done">
+    <br>
+    <br>
+    <div class="pure-g">
+        <div class="pure-u-1">
+            <h3>
+                Loading...
+            </h3>
+        </div>
+    </div>
+    <br>
+    <hr>
+    <br>
+</div>
+<div class="text-center" ng-show="done">
+    <br>
+    <br>
+    <div class="pure-g">
+        <div class="pure-u-1">
+            <h3>
+                All done!
+            </h3>
+        </div>
+    </div>
+    <br>
+    <hr>
+    <br>
+</div>
+
