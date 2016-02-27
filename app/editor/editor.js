@@ -1,15 +1,15 @@
 'use strict';
 
-angular.module('myApp.view1', ['ngRoute'])
+angular.module('corpusaurus.editor', ['ngRoute'])
 
 .config(['$routeProvider', function($routeProvider) {
-  $routeProvider.when('/view1', {
-    templateUrl: 'view1/view1.html',
-    controller: 'View1Ctrl'
+  $routeProvider.when('/editor', {
+    templateUrl: 'editor/editor.html',
+    controller: 'EditorCtrl'
   });
 }])
 
-.controller('View1Ctrl', ["$scope", "file", function($scope, file) {
+.controller('EditorCtrl', ["$scope", "file", function($scope, file) {
 
     $scope.headers = [];
     $scope.data = [];
