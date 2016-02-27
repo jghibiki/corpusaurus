@@ -1,3 +1,4 @@
+from flask import session
 import tablib
 import json
 import csv

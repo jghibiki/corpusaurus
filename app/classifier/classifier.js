@@ -9,6 +9,18 @@ angular.module('corpusaurus.classifier', ['ngRoute'])
   });
 }])
 
-.controller('ClassifierCtrl', [function() {
+.controller('ClassifierCtrl', ["$scope", function($scope) {
+    $scope.currentTweet = "trump...."; 
 
+    $scope.markExample = function(){
+        alert("example");
+    }
+
+    $scope.markNotExample = function(){
+        alert("nonexample");
+    }
+
+    $scope.markUnkown = function(){
+        alert("unkown");
+    }
 }]);
