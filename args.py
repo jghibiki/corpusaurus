@@ -7,7 +7,8 @@ def load():
     parser.add_argument("-i", "--input-data")
     parser.add_argument("-o", "--output-data")
     parser.add_argument("-d", "--debug", action="store_true")
-    parser.add_argument("--output-header")
+    parser.add_argument("--data-field")
+    parser.add_argument("--preserve-fields")
     opts = parser.parse_args()
     return opts
 

@@ -19,3 +19,10 @@ def register(app, opts):
         app.logger.debug(json.dumps(json_data))
         data = tablib.Dataset(*json_data["data"], headers=json_data["headers"])
         return send_file(data.xls)
+
+    @app.route('/api/files/json', methods=["POST"])
+    def getJSON():
+        json_data = request.json
+        app.logger.debug(json.dumps(json_data))
+        data = tablib.Dataset(*json_data["data"], headers=json_data["headers"])
+        return send_file(data.json)
