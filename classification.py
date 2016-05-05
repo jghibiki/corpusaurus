@@ -1,64 +1,76 @@
 from flask import session, request, jsonify, abort
-import tablib
 import json
 import csv
 from os import path
 
-in_data = tablib.Dataset()
-out_data = tablib.Dataset()
+data = None
 base_route = "/api/classification/"
-out_data_path = None
+data_path = None
 
 def load(opts):
     if opts.input_data != None:
+
+        preserve_fields = set()
+        # check to see if a data field has been defined else die
+        if opts.data_field:
+            preserve_fields.add(opts.data_field)
+        else:
+            raise Exception("--data-field is required when loading from input file.")
+        # check to see if there is a list of fields we should preserve
+        #  in the output file
+        if opts.preserve_fields:
+            preserve_fields.update(opts.preserve_fields.split())
+
+
         if opts.debug: print("Loading Data")
         with open(opts.input_data, "r") as f:
-            reader = csv.reader(f)
-            in_data.headers = next(reader)
-            for row in reader:
-                in_data.append(row)
-        if opts.debug: print("Loaded %s rows of data." % len(in_data) )
+            global data
+            data = json.load(f)
 
-        if opts.output_header:
-            header = opts.output_header
-        else:
-            header = "data"
+        # clean up un-preserved columns
+        bad_keys = set(data[0].keys()) - preserve_fields
 
-        out_data.headers = [ header, "example", "nonexample", "unknown" ]
-        fake_row = [ "", 0, 0, 0]
+        for key in bad_keys:
+            for row in data:
+                del row[key]
 
-        global out_data_path
-        out_data_path = opts.output_data if opts.output_data else "out.csv"
+        # add classification field
+        for row in data:
+            row["classification"] = "none"
 
-        if not path.exists(out_data_path):
+        if opts.debug: print("Loaded %s rows of data." % len(data) )
+
+        # load output path
+        global data_path
+        data_path = opts.output_data if opts.output_data else "out.json"
+
+        # create an base output file
+        if not path.exists(data_path):
             if opts.debug: print("Create new output file.")
-            for row in range(len(in_data)):
-                out_data.append(fake_row)
 
-            with open(out_data_path, "w") as f:
-                f.write(out_data.csv)
-        else:
-            if opts.debug: print("Load existing output file.")
-            with open(out_data_path, "r") as f:
-                reader = csv.reader(f)
-                headers = next(reader)
-                out_data.headers = headers
-                for row in reader:
-                    out_data.append((row[0], int(row[1]), int(row[2]), int(row[3])))
+            with open(data_path, "w") as f:
+                json.dump(data, f)
+
+    else:
+        if opts.debug: print("Load existing output file.")
+        with open(data_path, "r") as f:
+            global data
+            data = json.load(f)
 
 
 def register(app, opts):
 
     @app.route(base_route + "element/count/", methods=["GET"])
     def getNumberOfElements():
-        return jsonify({"result": len(in_data)})
+        global data
+        return jsonify({"result": len(data)})
 
     @app.route(base_route + "element/", methods=["GET"])
     def getElementInSessionRange():
         if "next" in session:
             nxt = session["next"]
             session["current"] = nxt
-            element = in_data["tweet"][nxt]
+            element = data[nxt][opts.data_field]
             resp = jsonify({"result": element})
             session["next"] += 1
             return resp
@@ -69,19 +81,14 @@ def register(app, opts):
     def setElementClassification(classification):
         if "current" in session:
             current = session["current"]
-            element = in_data[current]
-            out_element = out_data[current]
+            data[current]["classification"] = classification
 
-            if classification == "example":
-                out_data[current] = (element[4], out_element[1]+1, out_element[2], out_element[3])
-            elif classification == "nonexample":
-                out_data[current] = (element[4], out_element[1], out_element[2]+1, out_element[3])
-            elif classification == "unknown":
-                out_data[current] = (element[4], out_element[1], out_element[2], out_element[3]+1)
-
-            global out_data_path
-            with open(out_data_path, "w") as f:
-                f.write(out_data.csv)
+            # Save every ten elements, should improve performance
+            if current % 10 == 0:
+                global data_path
+                global data
+                with open(data_path, "w") as f:
+                    json.dump(data, f)
 
             return jsonify({"response": True})
 
