@@ -71,7 +71,8 @@ def register(app, opts):
             nxt = session["next"]
             session["current"] = nxt
             element = data[nxt][opts.data_field]
-            resp = jsonify({"result": element})
+            classification = data[nxt]["classification"]
+            resp = jsonify({"element": element, "classification":classification})
             session["next"] += 1
             return resp
         else:

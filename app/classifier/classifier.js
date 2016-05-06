@@ -12,6 +12,7 @@ angular.module('corpusaurus.classifier', ['ngRoute'])
 .controller('ClassifierCtrl', ["$scope", "$http", function($scope, $http) {
     $scope.loading = true;
     $scope.elementsToClassify = "<Loading...>";
+    $scope.elementClassification = "none";
     $scope.start = null;
     $scope.stop = null;
     $scope.progress = null;
@@ -46,7 +47,8 @@ angular.module('corpusaurus.classifier', ['ngRoute'])
 
     $http.get('api/classification/element/count/')
     .then(function(resp){
-        $scope.elementsToClassify = resp.data.result; 
+        $scope.elementsToClassify = resp.data.element; 
+        $scope.elementClassification = resp.data.classification
         $scope.loading = false;
     }, function(resp){
         console.log(resp);
@@ -58,9 +60,10 @@ angular.module('corpusaurus.classifier', ['ngRoute'])
             $http.get('api/classification/element/')
             .then(function(resp){
                 $scope.progress = $scope.progress + 1;
-                $scope.tweet = resp.data.result
+                $scope.tweet = resp.data.element
                     .replace("&amp;", "&")
                     .replace(/https:\/\/t.co\/[A-Za-z-0-9]+/gi, "<URL> ");
+                $scope.elementClassification = resp.data.classification
                 $scope.initialized = true;
                 $scope.loading = false;
             }, function(resp){
