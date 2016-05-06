@@ -4,8 +4,8 @@ import csv
 from os import path
 
 data = None
-base_route = "/api/classification/"
 data_path = None
+base_route = "/api/classification/"
 
 def load(opts):
     if opts.input_data != None:
@@ -51,8 +51,16 @@ def load(opts):
             with open(data_path, "w") as f:
                 json.dump(data, f)
 
+        print("Finished Initializing Output File.")
+        exit()
+
     else:
         if opts.debug: print("Load existing output file.")
+
+        # load output path
+        global data_path
+        data_path = opts.output_data if opts.output_data else "out.json"
+
         with open(data_path, "r") as f:
             global data
             data = json.load(f)
@@ -72,7 +80,7 @@ def register(app, opts):
             session["current"] = nxt
             element = data[nxt][opts.data_field]
             classification = data[nxt]["classification"]
-            resp = jsonify({"element": element, "classification":classification})
+            resp = jsonify({"element": element, "classification":classification, "number": nxt})
             session["next"] += 1
             return resp
         else:
