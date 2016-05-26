@@ -2,6 +2,7 @@ from flask import session, request, jsonify, abort
 import json
 import csv
 from os import path
+from math import floor
 
 data = None
 data_path = None
@@ -71,45 +72,67 @@ def register(app, opts):
     @app.route(base_route + "element/count/", methods=["GET"])
     def getNumberOfElements():
         global data
-        return jsonify({"result": len(data)})
+        return jsonify(result=len(data))
 
-    @app.route(base_route + "element/", methods=["GET"])
-    def getElementInSessionRange():
-        if "next" in session:
-            nxt = session["next"]
-            session["current"] = nxt
-            element = data[nxt][opts.data_field]
-            classification = data[nxt]["classification"]
-            resp = jsonify({"element": element, "classification":classification, "number": nxt})
-            session["next"] += 1
-            return resp
+    @app.route(base_route + "element/id/<int:element_id>", methods=["GET"])
+    def getElement(element_id):
+        element = data[element_id][opts.data_field]
+        resp = jsonify(element)
+        session["next"] += 1
+        return resp
+
+    @app.route(base_route + "element/<string:key_type>/<int:key>/classify/", methods=["POST"])
+    def setElementClassification(key_type, key):
+        if key_type == "index":
+            data[key]["classification"] = request.json["classification"]
         else:
-            abort(400)
-
-    @app.route(base_route + "element/classify/<classification>/", methods=["POST"])
-    def setElementClassification(classification):
-        if "current" in session:
-            current = session["current"]
-            data[current]["classification"] = classification
-
-            # Save every ten elements, should improve performance
-            if current % 10 == 0:
-                global data_path
-                global data
-                with open(data_path, "w") as f:
-                    json.dump(data, f)
-
-            return jsonify({"response": True})
+            try:
+                for x in data:
+                    if key_type in x and x[key_type] == key:
+                        data[data.index(x)]["classification"] = request.json["classification"]
+            except:
+                raise Exception("Invalid key_type in url request.")
 
 
+        return jsonify(result=True)
 
 
-    @app.route(base_route + "range/<int:start>/<int:end>/", methods=["POST"])
-    def setRange(start, end):
-        session["start"] = start - 1
-        session["end"] = end
-        session["next"] = start - 1
-        session["current"] = None
-        return jsonify({"result": True})
+    @app.route(base_route + "save/", methods=["GET"])
+    def save():
+        global data_path
+        global data
+        with open(data_path, "w") as f:
+            json.dump(data, f)
+        return jsonify(result=True)
+
+
+    @app.route(base_route + "element/", defaults={"page": 0, "mask":""}, methods=["GET"])
+    @app.route(base_route + "element/page/<int:page>/", defaults={"mask":""}, methods=["GET"])
+    @app.route(base_route + "element/mask/<string:mask>/", defaults={"page":0},  methods=["GET"])
+    @app.route(base_route + "element/mask/<string:mask>/page/<int:page>/",  methods=["GET"])
+    def getElements(page, mask):
+        """
+            Get a page of elements
+        """
+        global data
+        page_size = 100
+
+        # Apply mask if nessisary
+        if mask != "":
+            masked_data = [ x for x in data if x["classification"] == mask ]
+        else:
+            masked_data = data
+
+        max_page = floor(len(masked_data)/page_size)
+
+        if page > max_page:
+            page = 0
+
+        start = page_size * page
+        end = start + page_size
+
+        page_data = masked_data[start:end]
+
+        return jsonify(data=page_data, page=page, max_page=max_page, page_size=100, mask=mask)
 
 
